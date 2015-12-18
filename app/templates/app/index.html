@@ -1,0 +1,119 @@
+<html ng-app="ispy">
+<head>
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Open+Sans" />
+
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css"/>
+    <style>
+        button {
+            display: block;
+            margin: 10px auto;
+        }
+
+        img {
+            height: 400px;
+            margin-top: 40px;
+            border: 1px solid #D1D1D1;
+            border-radius: 4px;
+        }
+
+        .full-width {
+            display: block;
+            width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .results {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-bar {
+            position: relative;
+            height: 25px;
+            margin: 4px 0;
+        }
+
+        .result-bar .text,
+        .result-bar .color {
+            display: inline-block;
+            height: 100%;
+        }
+
+        .result-bar .text {
+            width: 5%;
+            line-height: 25px;
+            float: right;
+            text-align: right;
+        }
+
+        .result-bar .color {
+            width: 94%;
+            background-color: green;
+        }
+
+        .result-bar label {
+            display: inline;
+            position: absolute;
+            left: -100px;
+        }
+    </style>
+</head>
+<body ng-controller="MainController" class="container">
+    <img class="full-width" ng-src="{{ imgUrl }}" />
+
+    <div class="full-width results">
+        <div class="result-bar" ng-repeat="category in predictions | orderBy : 'probability' : true">
+            <label ng-bind="category.name"></label>
+            <span class="color" ng-style="{'width': category.probability * 100 + '%'}"></span>
+            <span class="text">{{ category.probability }}%</span>
+        </div>
+    </div>
+
+    <input type="text" ng-model="imgUrl" class="full-width"/>
+
+    <button type="button" ng-click="categorize()" >
+        <span ng-hide="categorizing">Predict</span>
+        <span ng-show="categorizing" class="ng-hide">Predicting...</span>
+    </button>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js"></script>
+
+    <script>
+        angular.module('ispy', [])
+        .controller('MainController', function($scope, $http) {
+            $scope.predictions = [
+                {
+                    name: 'Kitchen',
+                    probability: 0.6
+                },
+                {
+                    name: 'Bathroom',
+                    probability: 0.2
+                },
+                {
+                    name: 'Living Room',
+                    probability: 0.3
+                }
+            ];
+            $scope.imgUrl = 'https://d2vzw4mx84c4xs.cloudfront.net/chafe/8/c6568de42e622b71b609454db97bd458.jpg';
+            $scope.categorizing = false;
+
+            $scope.categorize = function() {
+                $scope.categorizing = true;
+
+                $http.get('/app/analyze/', {url: $scope.imgUrl})
+                    .success(function(response) {
+                        $scope.predictions = response.whatever;
+                    })
+                    .error(function(response) {
+                        alert('OOPS! Something didn\'t work right');
+                    })
+                    .finally(function(response) {
+                        $scope.categorizing = false;
+                    });
+            };
+        });
+    </script>
+</body>
+</html>
